@@ -1,6 +1,12 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Day One - Dev Environment Infrastructure"
 
+Parameters:
+  LatestUbuntuAMI:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
+    Description: Latest Ubuntu 24.04 AMI from SSM Parameter Store
+
 Resources:
   # ============================================================
   # VPC
@@ -102,6 +108,27 @@ Resources:
         - Key: Name
           Value: day-one-dev-sg
 
+  # ============================================================
+  # EC2 Instance
+  # ============================================================
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestUbuntuAMI
+      InstanceType: t2.small
+      KeyName: Day-One-Keypair
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 20
+            VolumeType: gp3
+      Tags:
+        - Key: Name
+          Value: day-one-dev-ec2
+
 Outputs:
   VPCId:
     Description: VPC ID
@@ -110,3 +137,7 @@ Outputs:
   PublicSubnetId:
     Description: Public Subnet ID
     Value: !Ref PublicSubnet
+
+  EC2InstanceId:
+    Description: EC2 Instance ID
+    Value: !Ref EC2Instance
