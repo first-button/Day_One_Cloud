@@ -129,6 +129,24 @@ Resources:
         - Key: Name
           Value: day-one-dev-ec2
 
+  # ============================================================
+  # Elastic IP
+  # ============================================================
+  ElasticIP:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: day-one-dev-eip
+
+  EIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref EC2Instance
+      AllocationId: !GetAtt ElasticIP.AllocationId
+
 Outputs:
   VPCId:
     Description: VPC ID
@@ -141,3 +159,7 @@ Outputs:
   EC2InstanceId:
     Description: EC2 Instance ID
     Value: !Ref EC2Instance
+
+  EC2PublicIP:
+    Description: Elastic IP address
+    Value: !Ref ElasticIP
