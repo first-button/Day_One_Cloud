@@ -147,6 +147,63 @@ Resources:
       InstanceId: !Ref EC2Instance
       AllocationId: !GetAtt ElasticIP.AllocationId
 
+
+
+
+
+  # ============================================================
+  # ECR Repositories
+  # ============================================================
+  BackendRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: day-one-dev/backend
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 5 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  FrontendRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: day-one-dev/frontend
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 5 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
 Outputs:
   VPCId:
     Description: VPC ID
@@ -163,3 +220,11 @@ Outputs:
   EC2PublicIP:
     Description: Elastic IP address
     Value: !Ref ElasticIP
+
+  BackendRepositoryUri:
+    Description: Backend ECR Repository URI
+    Value: !GetAtt BackendRepository.RepositoryUri
+
+  FrontendRepositoryUri:
+    Description: Frontend ECR Repository URI
+    Value: !GetAtt FrontendRepository.RepositoryUri
