@@ -10,6 +10,7 @@ echo "Deploying stack: ${STACK_NAME}"
 aws cloudformation deploy \
   --template-file "${TEMPLATE_FILE}" \
   --stack-name "${STACK_NAME}" \
+  --capabilities CAPABILITY_NAMED_IAM \
   --region "${REGION}"
 
 echo ""
