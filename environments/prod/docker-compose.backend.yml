@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    image: ${ECR_REGISTRY}/day-one-dev/backend:latest
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=${MYSQL_USER}
+      - DB_PASSWORD=${MYSQL_PASSWORD}
+      - DB_NAME=${MYSQL_DATABASE}
+      - DB_PORT=3306
+      - GOOGLE_GEMINI_API=${GOOGLE_GEMINI_API}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - BASE_URL=${BASE_URL:-https://dayone01.site}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
