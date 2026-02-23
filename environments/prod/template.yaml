@@ -174,3 +174,59 @@ Resources:
       Tags:
         - Key: Name
           Value: day-one-prod-bastion
+
+  # ============================================================
+  # IAM Role (ECR + Secrets Manager access)
+  # ============================================================
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: day-one-prod-ec2-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Policies:
+        - PolicyName: SecretsManagerReadPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:first_button_*"
+      Tags:
+        - Key: Name
+          Value: day-one-prod-ec2-role
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref EC2Role
+
+  # ============================================================
+  # EC2 Instance (Private Subnet)
+  # ============================================================
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestUbuntuAMI
+      InstanceType: t2.small
+      KeyName: Day-One-Keypair
+      SubnetId: !Ref PrivateSubnet
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 20
+            VolumeType: gp3
+      Tags:
+        - Key: Name
+          Value: day-one-prod-ec2
