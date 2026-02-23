@@ -345,3 +345,28 @@ Resources:
       Tags:
         - Key: Name
           Value: day-one-prod-cf
+
+Outputs:
+  FrontendPublicIP:
+    Description: Frontend Elastic IP
+    Value: !Ref FrontendElasticIP
+
+  BackendInstanceId:
+    Description: Backend EC2 Instance ID
+    Value: !Ref EC2Instance
+
+  BastionPublicIP:
+    Description: Bastion Host Public IP
+    Value: !GetAtt BastionHost.PublicIp
+
+  CloudFrontDomain:
+    Description: CloudFront Distribution Domain (set CNAME in Gabia)
+    Value: !GetAtt CloudFrontDistribution.DomainName
+
+  CloudFrontDistributionId:
+    Description: CloudFront Distribution ID
+    Value: !Ref CloudFrontDistribution
+
+  CertificateArn:
+    Description: ACM Certificate ARN
+    Value: !Ref Certificate
