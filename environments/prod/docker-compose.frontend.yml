@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: ${ECR_REGISTRY}/day-one-dev/frontend:prod
+    image: ${ECR_REGISTRY}/day-one-prod/frontend:latest
     ports:
       - "80:80"
     volumes:

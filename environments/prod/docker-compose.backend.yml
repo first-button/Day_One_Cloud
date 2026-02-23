@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: ${ECR_REGISTRY}/day-one-dev/backend:prod
+    image: ${ECR_REGISTRY}/day-one-prod/backend:latest
     environment:
       - DB_HOST=mysql
       - DB_USER=${MYSQL_USER}
