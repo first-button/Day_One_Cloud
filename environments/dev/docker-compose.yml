@@ -88,4 +88,8 @@ volumes:
     external: true
     name: app_certbot_www
   prometheus_data:
+    external: true
+    name: app_prometheus_data
   grafana_data:
+    external: true
+    name: app_grafana_data

@@ -181,6 +181,11 @@ Resources:
           ToPort: 8000
           SourceSecurityGroupId: !Ref FrontendSecurityGroup
           Description: API from Frontend only
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: 10.0.1.0/24
+          Description: Prometheus scrape from dev EC2
       SecurityGroupEgress:
         - IpProtocol: "-1"
           CidrIp: 0.0.0.0/0
