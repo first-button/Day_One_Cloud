@@ -295,3 +295,53 @@ Resources:
     Properties:
       InstanceId: !Ref FrontendInstance
       AllocationId: !GetAtt FrontendElasticIP.AllocationId
+
+  # ============================================================
+  # ACM Certificate
+  # ============================================================
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: dayone01.site
+      SubjectAlternativeNames:
+        - "*.dayone01.site"
+      ValidationMethod: DNS
+      Tags:
+        - Key: Name
+          Value: day-one-prod-cert
+
+  # ============================================================
+  # CloudFront Distribution
+  # ============================================================
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Aliases:
+          - dayone01.site
+        ViewerCertificate:
+          AcmCertificateArn: !Ref Certificate
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        DefaultCacheBehavior:
+          TargetOriginId: frontend-origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
+          Compress: true
+        CacheBehaviors:
+          - PathPattern: /api/*
+            TargetOriginId: frontend-origin
+            ViewerProtocolPolicy: redirect-to-https
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
+            OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3  # AllViewer
+        Origins:
+          - Id: frontend-origin
+            DomainName: !Ref FrontendElasticIP
+            CustomOriginConfig:
+              HTTPPort: 80
+              OriginProtocolPolicy: http-only
+        HttpVersion: http2
+      Tags:
+        - Key: Name
+          Value: day-one-prod-cf
