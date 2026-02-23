@@ -74,6 +74,9 @@ services:
     depends_on:
       - prometheus
 
+# Migrated from Day_One repo (previously ran as `app/docker-compose.yml`).
+# Existing Docker volumes were created with the `app_` prefix.
+# Using `external: true` to preserve existing data (DB, SSL certs).
 volumes:
   mysql_data:
     external: true
