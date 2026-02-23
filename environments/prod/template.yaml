@@ -130,10 +130,13 @@ Resources:
   # ============================================================
   # Security Group - EC2 (Private)
   # ============================================================
-  EC2SecurityGroup:
+  # ============================================================
+  # Security Group - Frontend EC2 (Public)
+  # ============================================================
+  FrontendSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Prod EC2 Security Group
+      GroupDescription: Frontend Nginx Security Group
       VpcId: !Ref VPCId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -145,19 +148,46 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
-          Description: HTTP (CloudFront)
+          Description: HTTP
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
-          Description: HTTPS (CloudFront)
+          Description: HTTPS
       SecurityGroupEgress:
         - IpProtocol: "-1"
           CidrIp: 0.0.0.0/0
           Description: Allow all outbound
       Tags:
         - Key: Name
-          Value: day-one-prod-ec2-sg
+          Value: day-one-prod-frontend-sg
+
+  # ============================================================
+  # Security Group - Backend EC2 (Private)
+  # ============================================================
+  BackendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Backend API Security Group
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !Ref BastionSecurityGroup
+          Description: SSH from Bastion only
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          SourceSecurityGroupId: !Ref FrontendSecurityGroup
+          Description: API from Frontend only
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound
+      Tags:
+        - Key: Name
+          Value: day-one-prod-backend-sg
 
   # ============================================================
   # Bastion Host (Public Subnet)
@@ -220,7 +250,7 @@ Resources:
       KeyName: Day-One-Keypair
       SubnetId: !Ref PrivateSubnet
       SecurityGroupIds:
-        - !Ref EC2SecurityGroup
+        - !Ref BackendSecurityGroup
       IamInstanceProfile: !Ref EC2InstanceProfile
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
@@ -229,4 +259,39 @@ Resources:
             VolumeType: gp3
       Tags:
         - Key: Name
-          Value: day-one-prod-ec2
+          Value: day-one-prod-backend
+
+  # ============================================================
+  # Frontend EC2 (Public Subnet - Nginx)
+  # ============================================================
+  FrontendInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestUbuntuAMI
+      InstanceType: t2.micro
+      KeyName: Day-One-Keypair
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref FrontendSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 10
+            VolumeType: gp3
+      Tags:
+        - Key: Name
+          Value: day-one-prod-frontend
+
+  FrontendElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: day-one-prod-frontend-eip
+
+  FrontendEIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref FrontendInstance
+      AllocationId: !GetAtt FrontendElasticIP.AllocationId
