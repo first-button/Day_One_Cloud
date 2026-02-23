@@ -36,10 +36,10 @@ export default function () {
 
   sleep(1);
 
-  // 3. API health check (metrics endpoint)
-  const metrics = http.get(`${BASE_URL}/api/docs`);
-  check(metrics, {
-    'api docs accessible': (r) => r.status === 200,
+  // 3. API login page (OAuth redirect check)
+  const login = http.get(`${BASE_URL}/api/login`, { redirects: 0 });
+  check(login, {
+    'api login responds': (r) => r.status === 200 || r.status === 307,
   });
 
   sleep(Math.random() * 3 + 1); // 1~4초 랜덤 대기 (실제 사용자처럼)
