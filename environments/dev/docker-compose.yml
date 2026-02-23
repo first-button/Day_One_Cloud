@@ -76,7 +76,13 @@ services:
 
 volumes:
   mysql_data:
+    external: true
+    name: app_mysql_data
   certbot_conf:
+    external: true
+    name: app_certbot_conf
   certbot_www:
+    external: true
+    name: app_certbot_www
   prometheus_data:
   grafana_data:
