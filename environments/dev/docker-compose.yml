@@ -67,6 +67,9 @@ services:
 
   grafana:
     image: grafana/grafana
+    environment:
+      - GF_SERVER_ROOT_URL=https://dev.dayone01.site/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
       - grafana_data:/var/lib/grafana
     ports:
