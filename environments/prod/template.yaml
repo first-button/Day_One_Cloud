@@ -158,3 +158,19 @@ Resources:
       Tags:
         - Key: Name
           Value: day-one-prod-ec2-sg
+
+  # ============================================================
+  # Bastion Host (Public Subnet)
+  # ============================================================
+  BastionHost:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestUbuntuAMI
+      InstanceType: t2.micro
+      KeyName: Day-One-Keypair
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref BastionSecurityGroup
+      Tags:
+        - Key: Name
+          Value: day-one-prod-bastion
