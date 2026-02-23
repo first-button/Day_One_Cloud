@@ -273,6 +273,7 @@ Resources:
       SubnetId: !Ref PublicSubnet
       SecurityGroupIds:
         - !Ref FrontendSecurityGroup
+      IamInstanceProfile: !Ref EC2InstanceProfile
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
