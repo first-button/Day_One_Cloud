@@ -104,3 +104,57 @@ Resources:
     Properties:
       SubnetId: !Ref PrivateSubnet
       RouteTableId: !Ref PrivateRouteTable
+
+  # ============================================================
+  # Security Group - Bastion Host
+  # ============================================================
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Bastion Host Security Group
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+          Description: SSH from anywhere
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound
+      Tags:
+        - Key: Name
+          Value: day-one-prod-bastion-sg
+
+  # ============================================================
+  # Security Group - EC2 (Private)
+  # ============================================================
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Prod EC2 Security Group
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !Ref BastionSecurityGroup
+          Description: SSH from Bastion only
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP (CloudFront)
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS (CloudFront)
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound
+      Tags:
+        - Key: Name
+          Value: day-one-prod-ec2-sg
