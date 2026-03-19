@@ -448,6 +448,9 @@ Resources:
       TaskDefinition: !Ref AppTaskDefinition
       DesiredCount: 1
       LaunchType: EC2
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 0
+        MaximumPercent: 100
 
 Outputs:
   EC2PublicIP:
