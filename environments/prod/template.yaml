@@ -180,6 +180,77 @@ Resources:
         - !Ref ElasticIP
 
   # ============================================================
+  # WAF (CloudFront)
+  # ============================================================
+  WAFWebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: day-one-prod-waf
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: day-one-prod-waf
+      Rules:
+        # AWS 관리형 - SQL Injection 차단
+        - Name: AWS-AWSManagedRulesSQLiRuleSet
+          Priority: 1
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesSQLiRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: SQLiRuleSet
+
+        # AWS 관리형 - XSS 등 Common 공격 차단
+        - Name: AWS-AWSManagedRulesCommonRuleSet
+          Priority: 2
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: CommonRuleSet
+
+        # AWS 관리형 - Bad Inputs (Log4j 등)
+        - Name: AWS-AWSManagedRulesKnownBadInputsRuleSet
+          Priority: 3
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesKnownBadInputsRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: KnownBadInputsRuleSet
+
+        # Rate limiting - IP당 5분에 1000 요청
+        - Name: RateLimitRule
+          Priority: 4
+          Action:
+            Block: {}
+          Statement:
+            RateBasedStatement:
+              Limit: 1000
+              AggregateKeyType: IP
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimitRule
+
+  # ============================================================
   # CloudFront Distribution
   # ============================================================
   CloudFrontDistribution:
@@ -187,6 +258,7 @@ Resources:
     DependsOn: OriginDNSRecord
     Properties:
       DistributionConfig:
+        WebACLId: !GetAtt WAFWebACL.Arn
         Enabled: true
         Aliases:
           - dayone01.site
@@ -203,6 +275,14 @@ Resources:
           - PathPattern: /api/*
             TargetOriginId: ec2-origin
             ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - POST
+              - PATCH
+              - DELETE
             CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
             OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
         Origins:
@@ -451,6 +531,9 @@ Resources:
       DeploymentConfiguration:
         MinimumHealthyPercent: 0
         MaximumPercent: 100
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
 
 Outputs:
   EC2PublicIP:
@@ -476,6 +559,10 @@ Outputs:
   FrontendECRUri:
     Description: Frontend ECR Repository URI
     Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/day-one-prod/frontend"
+
+  WAFWebACLArn:
+    Description: WAF Web ACL ARN
+    Value: !GetAtt WAFWebACL.Arn
 
   SiteURL:
     Description: Production URL
