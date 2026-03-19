@@ -1,0 +1,238 @@
+{
+  "dashboard": {
+    "title": "Prod - Upload Pipeline Monitor",
+    "tags": ["prod", "load-test", "k6"],
+    "timezone": "Asia/Seoul",
+    "refresh": "5s",
+    "time": { "from": "now-30m", "to": "now" },
+    "panels": [
+      {
+        "type": "row",
+        "title": "Overview",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+        "collapsed": false
+      },
+      {
+        "type": "gauge",
+        "title": "Concurrent Uploads",
+        "gridPos": { "h": 8, "w": 6, "x": 0, "y": 1 },
+        "datasource": { "uid": "efe2u7f2s58u8b" },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0, "max": 20,
+            "thresholds": { "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 10 }
+            ]}
+          }
+        },
+        "targets": [
+          {
+            "expr": "concurrent_uploads{job=\"prod-backend\"}",
+            "legendFormat": "Concurrent",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "title": "Total Uploads",
+        "gridPos": { "h": 8, "w": 6, "x": 6, "y": 1 },
+        "datasource": { "uid": "efe2u7f2s58u8b" },
+        "fieldConfig": {
+          "defaults": { "unit": "short" }
+        },
+        "targets": [
+          {
+            "expr": "sum(increase(upload_step_duration_seconds_count{job=\"prod-backend\", step=\"file_save\"}[30m]))",
+            "legendFormat": "Uploads",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Upload RPS",
+        "gridPos": { "h": 8, "w": 6, "x": 12, "y": 1 },
+        "datasource": { "uid": "efe2u7f2s58u8b" },
+        "fieldConfig": {
+          "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 } }
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(upload_step_duration_seconds_count{job=\"prod-backend\", step=\"file_save\"}[1m]))",
+            "legendFormat": "RPS",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Error Rate",
+        "gridPos": { "h": 8, "w": 6, "x": 18, "y": 1 },
+        "datasource": { "uid": "efe2u7f2s58u8b" },
+        "fieldConfig": {
+          "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 } }
+        },
+        "targets": [
+          {
+            "expr": "sum by (error_type) (rate(upload_errors_total{job=\"prod-backend\"}[1m]))",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "title": "Pipeline Latency",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+        "collapsed": false
+      },
+      {
+        "type": "timeseries",
+        "title": "Total Upload Latency (p50 / p95)",
+        "gridPos": { "h": 9, "w": 12, "x": 0, "y": 10 },
+        "datasource": { "uid": "efe2u7f2s58u8b" },
+        "fieldConfig": {
+          "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 } }
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"ai_analysis\"}[1m]))) + histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"calendar_register\"}[1m])))",
+            "legendFormat": "p50 (AI + Calendar)",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"ai_analysis\"}[1m]))) + histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"calendar_register\"}[1m])))",
+            "legendFormat": "p95 (AI + Calendar)",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Pipeline Step Breakdown (p50)",
+        "description": "Each step stacked - where is the bottleneck?",
+        "gridPos": { "h": 9, "w": 12, "x": 12, "y": 10 },
+        "datasource": { "uid": "efe2u7f2s58u8b" },
+        "fieldConfig": {
+          "defaults": { "unit": "s", "custom": { "drawStyle": "bars", "lineWidth": 1, "fillOpacity": 50, "stacking": { "mode": "normal" } } }
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"file_save\"}[1m])))",
+            "legendFormat": "file_save",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"ai_analysis\"}[1m])))",
+            "legendFormat": "ai_analysis (Gemini)",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"parse_events\"}[1m])))",
+            "legendFormat": "parse_events",
+            "refId": "C"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"calendar_register\"}[1m])))",
+            "legendFormat": "calendar_register",
+            "refId": "D"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "title": "Google API Detail",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 19 },
+        "collapsed": false
+      },
+      {
+        "type": "timeseries",
+        "title": "Gemini AI Processing Time",
+        "description": "ai_analysis step - Gemini API call latency",
+        "gridPos": { "h": 9, "w": 12, "x": 0, "y": 20 },
+        "datasource": { "uid": "efe2u7f2s58u8b" },
+        "fieldConfig": {
+          "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 } }
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"ai_analysis\"}[1m])))",
+            "legendFormat": "p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"ai_analysis\"}[1m])))",
+            "legendFormat": "p95",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Google Calendar Registration Time",
+        "description": "calendar_register step - Google Calendar API latency",
+        "gridPos": { "h": 9, "w": 12, "x": 12, "y": 20 },
+        "datasource": { "uid": "efe2u7f2s58u8b" },
+        "fieldConfig": {
+          "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 } }
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"calendar_register\"}[1m])))",
+            "legendFormat": "p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"calendar_register\"}[1m])))",
+            "legendFormat": "p95",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "title": "Upload Files",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
+        "collapsed": false
+      },
+      {
+        "type": "histogram",
+        "title": "Upload File Size Distribution",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 30 },
+        "datasource": { "uid": "efe2u7f2s58u8b" },
+        "fieldConfig": {
+          "defaults": { "unit": "bytes", "custom": { "fillOpacity": 50 } }
+        },
+        "targets": [
+          {
+            "expr": "sum by (le) (rate(upload_file_size_bytes_bucket{job=\"prod-backend\"}[5m]))",
+            "legendFormat": "{{le}}",
+            "refId": "A",
+            "format": "heatmap"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Errors by Type",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 30 },
+        "datasource": { "uid": "efe2u7f2s58u8b" },
+        "fieldConfig": {
+          "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "lineWidth": 1, "fillOpacity": 50 } }
+        },
+        "targets": [
+          {
+            "expr": "sum by (error_type) (rate(upload_errors_total{job=\"prod-backend\"}[1m]))",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "schemaVersion": 39
+  },
+  "overwrite": true
+}
