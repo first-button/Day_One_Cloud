@@ -293,6 +293,7 @@ Resources:
             CustomOriginConfig:
               HTTPPort: 80
               OriginProtocolPolicy: http-only
+              OriginReadTimeout: 120
         HttpVersion: http2
       Tags:
         - Key: Name
