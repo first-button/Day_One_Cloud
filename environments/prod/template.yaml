@@ -469,8 +469,8 @@ Resources:
         - Name: redis
           Image: redis:7-alpine
           Essential: true
-          Memory: 128
-          MemoryReservation: 64
+          Memory: 64
+          MemoryReservation: 32
           HealthCheck:
             Command:
               - CMD-SHELL
