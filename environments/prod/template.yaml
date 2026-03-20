@@ -465,6 +465,27 @@ Resources:
               awslogs-region: !Ref "AWS::Region"
               awslogs-stream-prefix: mysql
 
+        # --- Redis (port 6379) ---
+        - Name: redis
+          Image: redis:7-alpine
+          Essential: true
+          Memory: 128
+          MemoryReservation: 64
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - redis-cli ping
+            Interval: 10
+            Timeout: 5
+            Retries: 5
+            StartPeriod: 10
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref BackendLogGroup
+              awslogs-region: !Ref "AWS::Region"
+              awslogs-stream-prefix: redis
+
         # --- Backend / FastAPI (port 8000) ---
         - Name: backend
           Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/day-one-prod/backend:latest"
@@ -473,6 +494,8 @@ Resources:
           MemoryReservation: 384
           DependsOn:
             - ContainerName: mysql
+              Condition: HEALTHY
+            - ContainerName: redis
               Condition: HEALTHY
           Environment:
             - Name: DB_HOST
@@ -483,6 +506,8 @@ Resources:
               Value: !Ref "AWS::Region"
             - Name: BASE_URL
               Value: "https://dayone01.site"
+            - Name: REDIS_URL
+              Value: "redis://localhost:6379/0"
           Secrets:
             - Name: DB_NAME
               ValueFrom: !Sub "${AppSecret}:MYSQL_DATABASE::"
