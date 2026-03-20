@@ -29,7 +29,7 @@
         },
         "targets": [
           {
-            "expr": "concurrent_uploads{job=\"prod-backend\"}",
+            "expr": "concurrent_uploads{job=\"prod-celery\"}",
             "legendFormat": "Concurrent",
             "refId": "A"
           }
@@ -45,7 +45,7 @@
         },
         "targets": [
           {
-            "expr": "sum(increase(upload_step_duration_seconds_count{job=\"prod-backend\", step=\"file_save\"}[30m]))",
+            "expr": "sum(increase(upload_step_duration_seconds_count{job=\"prod-celery\", step=\"file_save\"}[30m]))",
             "legendFormat": "Uploads",
             "refId": "A"
           }
@@ -61,7 +61,7 @@
         },
         "targets": [
           {
-            "expr": "sum(rate(upload_step_duration_seconds_count{job=\"prod-backend\", step=\"file_save\"}[1m]))",
+            "expr": "sum(rate(upload_step_duration_seconds_count{job=\"prod-celery\", step=\"file_save\"}[1m]))",
             "legendFormat": "RPS",
             "refId": "A"
           }
@@ -77,7 +77,7 @@
         },
         "targets": [
           {
-            "expr": "sum by (error_type) (rate(upload_errors_total{job=\"prod-backend\"}[1m]))",
+            "expr": "sum by (error_type) (rate(upload_errors_total{job=\"prod-celery\"}[1m]))",
             "legendFormat": "{{error_type}}",
             "refId": "A"
           }
@@ -99,12 +99,12 @@
         },
         "targets": [
           {
-            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"ai_analysis\"}[1m]))) + histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"calendar_register\"}[1m])))",
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"ai_analysis\"}[1m]))) + histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"calendar_register\"}[1m])))",
             "legendFormat": "p50 (AI + Calendar)",
             "refId": "A"
           },
           {
-            "expr": "histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"ai_analysis\"}[1m]))) + histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"calendar_register\"}[1m])))",
+            "expr": "histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"ai_analysis\"}[1m]))) + histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"calendar_register\"}[1m])))",
             "legendFormat": "p95 (AI + Calendar)",
             "refId": "B"
           }
@@ -121,22 +121,22 @@
         },
         "targets": [
           {
-            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"file_save\"}[1m])))",
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"file_save\"}[1m])))",
             "legendFormat": "file_save",
             "refId": "A"
           },
           {
-            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"ai_analysis\"}[1m])))",
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"ai_analysis\"}[1m])))",
             "legendFormat": "ai_analysis (Gemini)",
             "refId": "B"
           },
           {
-            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"parse_events\"}[1m])))",
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"parse_events\"}[1m])))",
             "legendFormat": "parse_events",
             "refId": "C"
           },
           {
-            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"calendar_register\"}[1m])))",
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"calendar_register\"}[1m])))",
             "legendFormat": "calendar_register",
             "refId": "D"
           }
@@ -159,12 +159,12 @@
         },
         "targets": [
           {
-            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"ai_analysis\"}[1m])))",
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"ai_analysis\"}[1m])))",
             "legendFormat": "p50",
             "refId": "A"
           },
           {
-            "expr": "histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"ai_analysis\"}[1m])))",
+            "expr": "histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"ai_analysis\"}[1m])))",
             "legendFormat": "p95",
             "refId": "B"
           }
@@ -181,12 +181,12 @@
         },
         "targets": [
           {
-            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"calendar_register\"}[1m])))",
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"calendar_register\"}[1m])))",
             "legendFormat": "p50",
             "refId": "A"
           },
           {
-            "expr": "histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-backend\", step=\"calendar_register\"}[1m])))",
+            "expr": "histogram_quantile(0.95, sum by (le) (rate(upload_step_duration_seconds_bucket{job=\"prod-celery\", step=\"calendar_register\"}[1m])))",
             "legendFormat": "p95",
             "refId": "B"
           }
@@ -208,7 +208,7 @@
         },
         "targets": [
           {
-            "expr": "sum by (le) (rate(upload_file_size_bytes_bucket{job=\"prod-backend\"}[5m]))",
+            "expr": "sum by (le) (rate(upload_file_size_bytes_bucket{job=\"prod-celery\"}[5m]))",
             "legendFormat": "{{le}}",
             "refId": "A",
             "format": "heatmap"
@@ -225,7 +225,7 @@
         },
         "targets": [
           {
-            "expr": "sum by (error_type) (rate(upload_errors_total{job=\"prod-backend\"}[1m]))",
+            "expr": "sum by (error_type) (rate(upload_errors_total{job=\"prod-celery\"}[1m]))",
             "legendFormat": "{{error_type}}",
             "refId": "A"
           }
